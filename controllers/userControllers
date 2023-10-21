@@ -1,0 +1,21 @@
+const User = require('../models/User');
+
+// Recuperation de la couche de hachage
+const bcrypt= require('bcrypt');
+
+
+
+exports.CreateUser = ((req, res) => {
+    // Copie des infos de connexions de lutilisateur
+    const newUser = new User({
+      ...req.body
+    });
+  
+    // Hachage du password
+    // newUser.bcrypt()
+  
+    // Sauvegarde
+    newUser.save()
+      .then(() => res.status(201).json({message : 'Creation d\'un nouveau compte'}))
+      .catch(error => res.status(500).json({error}));
+  })
