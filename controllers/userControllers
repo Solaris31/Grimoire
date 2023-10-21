@@ -6,16 +6,16 @@ const bcrypt= require('bcrypt');
 
 
 exports.CreateUser = ((req, res) => {
-    // Copie des infos de connexions de lutilisateur
-    const newUser = new User({
-      ...req.body
-    });
-  
-    // Hachage du password
-    // newUser.bcrypt()
-  
-    // Sauvegarde
-    newUser.save()
-      .then(() => res.status(201).json({message : 'Creation d\'un nouveau compte'}))
-      .catch(error => res.status(500).json({error}));
+  bcrypt.hash(req.body.password, 10)
+    .then(hash => {
+      // Copie des infos de connexions de lutilisateur avce mdp haché
+      const newUser = new User({
+        email: req.body.email,
+        password: hash
+      });
+      newUser.save()
+        .then(() => {res.status(201).json({message : 'Utilisateur enregistré'})})
+        .catch(error => {res.status(400).json({error})});
+    })
   })
+  .catch(error => res.status(500).json({error}));
