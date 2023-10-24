@@ -1,12 +1,11 @@
 const User = require('../models/User');
-const express = require('express');
 
 // Recuperation de la couche de hachage
 const bcrypt= require('bcrypt');
 
 
 
-// Creation dun nouvel utilisateur dans la BD
+// SIGNUP : creation dun nouvel utilisateur dans la BD ----------------------------------------------
 exports.CreateUser = (req, res) => {
 
   bcrypt.hash(req.body.password, 10)
@@ -14,8 +13,8 @@ exports.CreateUser = (req, res) => {
       delete req.body._id;
 
       const newUser = new User({
-        email: (req.body.email).toLowerCase(),  // Affectation de lemail passé en parametre en version minuscule
-        password: hash                          // Affectation du mdp fourni en parametre puis haché
+        email: (req.body.email).toLowerCase(),  // Affectation de lemail en version minuscule
+        password: hash                          // Affectation du MDP fourni en parametre puis haché
       });
 
       newUser.save()
@@ -27,20 +26,23 @@ exports.CreateUser = (req, res) => {
 
 
 
-// Connexion utilisateur connu dans la BD
+// LOGIN : connexion utilisateur connu dans la BD -----------------------------------------------------
 exports.AuthentifyUser = (req, res) => {
   
-  console.log(req.body);
+  console.log(req.body.email);
 
-  User.findOne({email : req.body.email})
+  User.findOne({email: req.body.email})
     .then( userBD => {
-      if (!userBD) { res.status(404).json({error})}  // Email inconnu
+      if (!userBD) { res.status(404).json({error})}                            // Email inconnu
 
       else {
-        userBD.compare(req.body.password)
-          .then( () => {res.status(202).json({message : 'Utilisateur authentifié'})})
-          .catch( error => res.status(403).json({error}));  // Mdp erroné
+        bcrypt.compare( User.password, req.body.password )
+          .then( result => {
+            if (!result) {res.status(405).json({error})}                       // MPD errone
+            else {res.status(202).json({message : 'Utilisateur authentifié'})} // MDP correct
+          })
+          .catch( error => res.status(403).json({error}));                     // Comparaison erronee
       }
     })
-    .catch(error => res.status(501).json({error}));  // Erreur de connexion a la BD
+    .catch( error => res.status(501).json({ error : 'appel a la BD errone'})); // Erreur de connexion a la BD
 };
