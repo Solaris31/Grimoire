@@ -8,8 +8,12 @@ const mongoose = require('mongoose');
 const Book= require('./models/Book');
 // Middleware de prise en charge des données json dans lapplication express
 app.use(express.json());
-// Importation du router pour les utilisateurs
+
+// Importation des routes
 const routerUser = require('./routes/routesUser');
+
+// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+const routerBook = require('./routes/routesBook');
 
 
 
@@ -30,8 +34,11 @@ app.use((req, res, next) => {
   });
 
 
-// Mappage des routes avec les definitions du fichier routerUser
+// Mappage des diverses routes pour les utilisateurs
 app.use('/api/auth', routerUser );
+
+// Mappage des diverses routes pour les livres
+app.use('/api/books', routerBook );
 
 // Exportation du module
 module.exports = app;

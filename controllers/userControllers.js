@@ -1,48 +1,61 @@
+//Importation du modele utilisisateur
 const User = require('../models/User');
 
-// Recuperation de la couche de hachage
+// Recuperation de la fonction de hachage
 const bcrypt= require('bcrypt');
 
+// Recupreration de lla fonction des token
+const jsonWebToken = require('jsonwebtoken');
 
 
-// SIGNUP : creation dun nouvel utilisateur dans la BD ----------------------------------------------
+
+// -1- SIGNUP : creation dun nouvel utilisateur dans la BD --------------------------------------------
 exports.CreateUser = (req, res) => {
 
   bcrypt.hash(req.body.password, 10)
-    .then(hash => {
-      delete req.body._id;
+  .then(hash => {
+    delete req.body._id;
 
-      const newUser = new User({
-        email: (req.body.email).toLowerCase(),  // Affectation de lemail en version minuscule
-        password: hash                          // Affectation du MDP fourni en parametre puis haché
-      });
+    const newUser = new User({
+      email: (req.body.email).toLowerCase(),  // Affectation de lemail en version minuscule
+      password: hash                          // Affectation du MDP haché
+    });
 
-      newUser.save()
-        .then( () => res.status(201).json({message : 'Utilisateur enregistré'}))
-        .catch(error => res.status(400).json({error}));
-    })
-    .catch(error => res.status(500).json({error}));
+    newUser.save()
+      .then( () => res.status(201).json({message : 'Utilisateur enregistré'}))  // Sauvegarde
+      .catch(error => res.status(400).json({error}));                           // Erreur sauvegarde
+  })
+  .catch(error => res.status(508).json({error}));   // Erreur de connexion a la BD
 };
 
 
 
-// LOGIN : connexion utilisateur connu dans la BD -----------------------------------------------------
+
+// -2- LOGIN : connexion utilisateur connu dans la BD ------------------------------------------------
 exports.AuthentifyUser = (req, res) => {
-  
-  console.log(req.body.email);
-
+ 
   User.findOne({email: req.body.email})
-    .then( userBD => {
-      if (!userBD) { res.status(404).json({error})}                            // Email inconnu
-
-      else {
-        bcrypt.compare( User.password, req.body.password )
-          .then( result => {
-            if (!result) {res.status(405).json({error})}                       // MPD errone
-            else {res.status(202).json({message : 'Utilisateur authentifié'})} // MDP correct
-          })
-          .catch( error => res.status(403).json({error}));                     // Comparaison erronee
-      }
-    })
-    .catch( error => res.status(501).json({ error : 'appel a la BD errone'})); // Erreur de connexion a la BD
-};
+  .then( userBD => {
+    if (userBD === null) {
+      res.status(401).json({message : 'Identifiants email ou MDP incorrects'})         //Email introuvable
+    }
+    else {
+      bcrypt.compare( req.body.password , userBD.password )
+      .then(result => {
+        if (result) {res.status(200).json({                                            // MPD correct
+          message : 'Utilisateur authentifié',
+          _id : userBD._id, 
+          token : jsonWebToken.sign(
+            {userId: userBD._id},
+            'Test_For_Ramdom_Token',
+            {expiresIn: '24h'})
+        })}
+        else {res.status(401).json({error : 'Identifiants email ou MDP incorrects'})}  // MDP incorrect
+      })
+      .catch(                                                                          // Erreur lors de la comparaison des MPD
+    error => res.status(500).json({error})
+  )}})
+  .catch(error => {                                                                    // Erreur dechange avec la BD
+    res.status(500).json({error})
+  })
+}

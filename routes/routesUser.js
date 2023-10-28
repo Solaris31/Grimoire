@@ -1,15 +1,15 @@
 // Importation des dépendances
 const express = require('express');
 const router = express.Router();
-const UserControllers= require('../controllers/userControllers');
+const userControllers= require('../controllers/userControllers');
 
 
 
 // Creation dun nouveau compte utilisateur
-router.post('/signup', UserControllers.CreateUser);
+router.post('/signup', userControllers.CreateUser);
 
 // Connexion dun utilisateur connu dans la BD
-router.post('/login', UserControllers.AuthentifyUser);
+router.post('/login', userControllers.AuthentifyUser);
 
 
 // Exportation du module
