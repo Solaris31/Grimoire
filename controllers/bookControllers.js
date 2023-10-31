@@ -1,7 +1,9 @@
 //Importation du modele book
 const Book = require('../models/Book');
 
-// -6- CREATE BOOK : Creation dun nouveau livre selon lié a son createur par l'id ------------------
+
+
+// -6- Creation dun nouveau livre -----------------------------------------------------------
 exports.CreateBook = (req, res, next) => {
 
     const newBook = new Book({
@@ -23,17 +25,29 @@ exports.CreateBook = (req, res, next) => {
     .then( () => {
         res.status(200).json({message : 'Creation dun nouveau livre'})  // Creation dun livre
     })
-    .catch(error => {res.status(502).json({ error})})  // Erreur de requette a la BD
+    .catch(error => {res.status(502).json({error})})  // Erreur de requette a la BD
 };
 
 
 
-// -6- FIND ALL BOOK : Renvoie tous les livres de la BD -------------------------------------------
+// -3- Renvoie tous les livres de la BD ------------------------------------------------------
 exports.FindAllBook = (req, res, next) => {
     
     Book.find()
     .then( ArrayOfBook => {
-        res.status(200).json({ArrayOfBook})}
+        res.status(200).json(ArrayOfBook)}
     )
-    .catch(error => res.status(404).json({error}));
-    }
+    .catch(error => res.status(404).json({error}));  // Liste de livres non trouvée
+}
+
+
+
+// -4- Affichage un livre en fonction de l'Id fourni ----------------------------------------
+exports.FindOneBook = (req, res, next) => {
+
+    Book.findOne( {_id : req.params.id} )
+    .then( oneBook => { 
+        res.status(200).json(oneBook)
+    })
+    .catch(error => res.status(400).json(error))  // Livre non trouvé
+};
