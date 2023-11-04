@@ -9,7 +9,7 @@ const jsonWebToken = require('jsonwebtoken');
 
 
 
-// -1- SIGNUP, Creation dun nouvel utilisateur dans la BD -------------------------------------------------
+// -1- SIGNUP Creation dun nouvel utilisateur dans la BD -------------------------------------------------
 exports.CreateUser = (req, res, next) => {
 
   bcrypt.hash(req.body.password, 10)
@@ -31,7 +31,7 @@ exports.CreateUser = (req, res, next) => {
 
 
 
-// -2- LOGIN, Connexion utilisateur connu dans la BD -------------------------------------------------------
+// -2- LOGIN connexion utilisateur connu dans la BD -------------------------------------------------------
 exports.AuthentifyUser = (req, res, next) => {
  
   User.findOne({email: req.body.email})

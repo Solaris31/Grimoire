@@ -9,10 +9,11 @@ const Book= require('./models/Book');
 // Middleware de prise en charge des données json dans lapplication express
 app.use(express.json());
 
+// Definition de la route (path) de notre server
+const path = require('path');
+
 // Importation des routes
 const routerUser = require('./routes/routesUser');
-
-// XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 const routerBook = require('./routes/routesBook');
 
 
@@ -39,6 +40,7 @@ app.use('/api/auth', routerUser );
 
 // Mappage des diverses routes pour les livres
 app.use('/api/books', routerBook );
+app.use('/images', express.static(path.join(__dirname, 'images')));
 
 // Exportation du module
 module.exports = app;

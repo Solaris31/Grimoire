@@ -1,13 +1,23 @@
 // Importation des dépendances
 const express = require('express');
-const auth = require('../middleware/auth');
-
 const router = express.Router();
+
+const auth = require('../middleware/auth');
+const multer = require('../middleware/multer-config');
+
+
 const bookControllers= require('../controllers/bookControllers');
 
 
-router.post('/', auth, bookControllers.CreateBook);
+
+
+//Routes des books
+router.post('/', auth, multer, bookControllers.CreateBook);
+
+router.put('/:id', auth, multer, bookControllers.UpdateBook);
+
 router.get('/', auth, bookControllers.FindAllBook);
+
 router.get('/:id', auth, bookControllers.FindOneBook);
 
 
