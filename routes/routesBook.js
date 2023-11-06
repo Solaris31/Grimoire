@@ -22,6 +22,8 @@ router.get('/:id', auth, bookControllers.FindOneBook);
 
 router.delete('/:id', auth, bookControllers.DeleteBook);
 
+router.post('/:id/rating', auth, bookControllers.NotationBook);
+
 
 // Exportation du module
 module.exports = router;
