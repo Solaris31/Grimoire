@@ -1,5 +1,8 @@
-//Importation du modele book
+// Importation du modele book
 const Book = require('../models/Book');
+
+// Package fs pour la suppression dun fichier
+const fs = require('fs');
 
 
 // -6- CREATION dun nouveau livre -----------------------------------------------------------
@@ -48,14 +51,45 @@ exports.FindOneBook = (req, res, next) => {
 // -7- UPDATE dun livre trouvé grace a son ID du livre fourni en parametre -------------------
 exports.UpdateBook = ( req, res, next) => {
 
-
-    if(req.file) {
-        req.body.imageUrl = `${req.protocol}://${req.get('host')}/images/${req.file.filename}`;
-    }
-
-    Book.updateOne({_id : req.params.id}, {...req.body, _id : req.params.id})
+    Book.findOne({_id : req.body._id})
     .then( () => {
-        res.status(200).json('Livre mis a jour');
+        if(req.file) {  // remplacement de limage
+            req.body.imageUrl = `${req.protocol}://${req.get('host')}/images/${req.file.filename}`;
+        }
+
+        Book.updateOne({_id : req.params.id}, {...req.body, _id : req.params.id})
+        .then( () => {
+            res.status(200).json('Livre mis a jour');
+        })
+        .catch(error => res.status(400).json({error}));  // Erreur dacces au livre
     })
-    .catch(error => res.status(400).json({error}));  // Livre non trouvé
+    .catch(error => { res.status(500).json({error})});  // Erreur dacces a la BD
+    };
+
+
+
+// -8- DELETE Suppression dun livre selon l'ID passé en parametre ------------------------------
+exports.DeleteBook = (req, res, next) => {
+
+    Book.findOne({ _id: req.params.id})
+    .then( bookToDelete => {
+        if (bookToDelete.userId != req.auth.userId) {
+            res.status(401).json({message : 'Droits insuffisants pour la suppression'});
+        } else {
+            const filename = bookToDelete.imageUrl.split('/images/')[1];
+            fs.unlink(`images/${filename}`, () => {
+                bookToDelete.deleteOne({_id : req.params.id})
+                .then( () => {res.status(200).json({message : 'Livre supprimé'})})
+                .catch(error => res.status(401).json({error}));
+            })
+        }
+    })
+    .catch(error => res.status(500).json(error));
+};
+
+
+
+// -9- Notation dun livre (1-5)
+exports.NotationBook = (req, res, next) => {
+    
 };

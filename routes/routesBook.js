@@ -20,6 +20,8 @@ router.get('/', auth, bookControllers.FindAllBook);
 
 router.get('/:id', auth, bookControllers.FindOneBook);
 
+router.delete('/:id', auth, bookControllers.DeleteBook);
+
 
 // Exportation du module
 module.exports = router;
