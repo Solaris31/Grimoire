@@ -51,7 +51,7 @@ exports.FindOneBook = (req, res, next) => {
 // -7- UPDATE dun livre trouvé grace a son ID du livre fourni en parametre -------------------
 exports.UpdateBook = ( req, res, next) => {
 
-    Book.findOne({_id : req.body._id})
+    Book.findOne({_id : req.params.id})
     .then( () => {
         if(req.file) {  // remplacement de limage
             req.body.imageUrl = `${req.protocol}://${req.get('host')}/images/${req.file.filename}`;
@@ -74,7 +74,7 @@ exports.DeleteBook = (req, res, next) => {
     Book.findOne({ _id: req.params.id})
     .then( bookToDelete => {
         if (bookToDelete.userId != req.auth.userId) {
-            res.status(401).json({message : 'Droits insuffisants pour la suppression'});
+            res.status(401).json({message : 'Droits insuffisants pour la suppression du livre'});
         } else {
             const filename = bookToDelete.imageUrl.split('/images/')[1];
             fs.unlink(`images/${filename}`, () => {
@@ -91,5 +91,19 @@ exports.DeleteBook = (req, res, next) => {
 
 // -9- Notation dun livre (1-5)
 exports.NotationBook = (req, res, next) => {
-    
-};
+
+    Book.findOne({ _id : req.params.id })
+    .then( bookToNote => {
+        if( bookToNote.userId != req.auth.userId ) { res.status(401).json("Droits insuffisants pour la notation du livre")}
+        else {
+            if (req.body.rating <1 || req.body.rating >5) { res.status(403).json('Notation du livre erronnée') }
+            else {
+
+                bookToNote.updateOne({_id : req.params.id}, { ...req.body, _id : req.params.id })
+                .then( () => {res.status(200).json("Le livre a ete mis a jour avec sa notation")})
+                .catch(error => { res.status(403).json({error})})
+            }
+        }
+    })
+    .catch(error => { res.status(404).json({error}) })  // Ressource non trouvee
+}
