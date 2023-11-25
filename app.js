@@ -9,16 +9,20 @@ const Book= require('./models/Book');
 // Middleware de prise en charge des données json dans lapplication express
 app.use(express.json());
 
+// const bodyParser = require("body-Parser");
+
+
 // Definition de la route (path) de notre server
 const path = require('path');
 
 // Importation des routes
 const routerUser = require('./routes/routesUser');
 const routerBook = require('./routes/routesBook');
+const bodyParser = require('body-parser');
 
 
 // connexion a MongoDB
-mongoose.connect('mongodb+srv://joseluisgarcia31000:xgVD41iqBjZgrfW3@cluster0.icdbzs9.mongodb.net/?retryWrites=true&w=majority',
+mongoose.connect(process.env.DB,
   { useNewUrlParser: true,
     useUnifiedTopology: true })
   .then(() => console.log('Connexion à MongoDB réussie !'))
@@ -40,6 +44,9 @@ app.use('/api/auth', routerUser );
 // Mappage des diverses routes pour les livres
 app.use('/api/books', routerBook );
 app.use('/images', express.static(path.join(__dirname, 'images')));
+
+// Eclatement des données transmisent sous forme de chaine de caracteres
+app.use(bodyParser.json());
 
 // Exportation du module
 module.exports = app;

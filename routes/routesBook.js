@@ -3,8 +3,9 @@ const express = require('express');
 const router = express.Router();
 
 
-const auth = require('../middleware/auth');
-const multer = require('../middleware/multer-config');
+const auth = require('../middleware/auth')             // Middleware "auth" pour lauthentification par JsonWebToken
+const multer = require('../middleware/multer-config')  // Middleware "multer" pour la gestion de telechargement de fichier en MultiPart/form
+
 
 const bookControllers= require('../controllers/bookControllers');
 

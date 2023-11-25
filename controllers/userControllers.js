@@ -46,7 +46,7 @@ exports.AuthentifyUser = (req, res, next) => {
           _id : userBD._id, 
           token : jsonWebToken.sign(
             {userId: userBD._id},
-            'TEST_FOR_RAMDOM_TOKEN',
+            process.env.JWT_TOKEN,
             {expiresIn: '24h'})
         })}
         else {res.status(401).json({error : 'Identifiants email ou MDP incorrects'})}  // MDP incorrect

@@ -1,4 +1,5 @@
 const multer = require('multer');
+const sharp = require('sharp');
 
 // MIME_TYPES : Definition de la nature et du format dun objet
 const MIME_TYPES = {
@@ -17,5 +18,4 @@ const MIME_TYPES = {
       callback(null, name + Date.now() + '.' + extension);
     }
   });
-
 module.exports = multer({storage: storage}).single('image');

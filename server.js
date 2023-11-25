@@ -1,3 +1,8 @@
+require('dotenv').config()
+console.log(process.env)
+
+
+
 // Recuperation de la resource http de Node
 const http = require ('http');
 
