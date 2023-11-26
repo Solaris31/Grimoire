@@ -1,6 +1,6 @@
 require('dotenv').config()
-console.log(process.env)
 
+// console.log(process.env)
 
 
 // Recuperation de la resource http de Node
@@ -11,7 +11,7 @@ const http = require ('http');
 const app = require('./app');
 
 
-// On set le port a la valeur du port
+// On set le port a la valeur du port BACK a 4000 sinon a 3000
 app.set('port', process.env.PORT || 3000);
 
 
@@ -19,5 +19,5 @@ app.set('port', process.env.PORT || 3000);
 const server=http.createServer(app);
 
 
-// Mise sous ecoute du serveur sur port proposé ou 3000
+// Mise sous ecoute du serveur sur port BACK a 4000 sinon a 3000
 server.listen(process.env.PORT || 3000);

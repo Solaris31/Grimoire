@@ -1,12 +1,12 @@
 const multer = require('multer');
 const sharp = require('sharp');
 
-// MIME_TYPES : Definition de la nature et du format dun objet
+// MIME_TYPES : RE-definition du format dun objet
 const MIME_TYPES = {
     'image/jpg': 'jpg',
     'image/jpeg': 'jpg',
     'image/png': 'png'
-  };
+};
 
   const storage = multer.diskStorage({
     destination: (req, file, callback) => {

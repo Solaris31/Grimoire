@@ -1,6 +1,6 @@
 // Importation du modele book
+const bodyParser = require('body-parser');
 const Book = require('../models/Book');
-const mongoose = require('mongoose');
 
 
 // Package fs pour la gestion dun fichier
@@ -11,12 +11,9 @@ const fs = require('fs');
 exports.FindAllBook = (req, res, next) => {
     
     Book.find()
-    .then( arrayOfBook => {
-        if(arrayOfBook.length > 0) { res.status(200).json(arrayOfBook) }  // Tableau de livre vide
-        else {res.status(404).json('Aucun livre trouvé')}
-    })
-    .catch( error => res.status(500).json({error}));                      // Erreur daccees a la BD
-}
+    .then( arrayOfBook => { res.status(200).json(arrayOfBook) })
+    .catch( error => res.status(500).json({error}));               // Erreur daccees a la BD
+};
 
 
 // -4- Affichage dun livre en fonction de l'Id du livre fourni en parametre ------------------
@@ -40,14 +37,14 @@ exports.FindBestRating = (req, res, next) => {
         if( arrayOf3Book.length > 0 ) { res.status(200).json(arrayOf3Book) }
         else { res.status(404).json(arrayOf3Book)}
     })
-    .catch( error => res.status(500).json({error}));  // Erreur daccee a la BD
+    .catch( error => res.status(500).json({error}));  // Erreur dacces a la BD
 };
 
 
 // -6- Creation dun nouveau livre -----------------------------------------------------------
 exports.CreateBook = (req, res, next) => {
 
-    const { book } = req.body;
+    const {book} = req.body;
     const data = JSON.parse(book);
 
     const bookToSave = new Book({
@@ -57,18 +54,22 @@ exports.CreateBook = (req, res, next) => {
         imageUrl: `${req.protocol}://${req.get('host')}/images/${req.file.filename}`,
         year: data.year,
         genre: data.genre,
-        averageRating: 0
+        averageRating: 0,
     });
 
     bookToSave.save()
-    .then( () => { res.status(200).json({message : 'Creation dun nouveau livre'})  // Creation dun livre
+    .then( book => {  // Creation dun livre
+
+        if(!book) { res.status(404).json({error})}
+        else { res.status(200).json({message : 'Creation dun nouveau livre'}) }
     })
-    .catch(error => { res.status(404).json({error})})  // Erreur de requette a la BD
+    .catch(error => { res.status(500).json({error})})  // Erreur de requette a la BD
 };
 
 
 // -7- Update dun livre trouvé grace a son ID du livre fourni en parametre -------------------
 exports.UpdateBook = ( req, res, next) => {
+
 
     Book.findOne({_id : req.params.id})
     .then( () => {
@@ -76,7 +77,9 @@ exports.UpdateBook = ( req, res, next) => {
             req.body.imageUrl = `${req.protocol}://${req.get('host')}/images/${req.file.filename}`;
         }
 
-        Book.updateOne({_id : req.params.id}, {...req.body, _id : req.params.id})
+        Book.updateOne({_id : req.params.id},
+            { $set: {_id : req.params.id, ...req.body } }
+        )
         .then( () => {
             res.status(200).json('Livre mis a jour');
         })
@@ -117,12 +120,17 @@ exports.NotationBook = (req, res, next) => {
             // Teste si lutilisateur a DEJA noté ce livre
             return Book.findOne({ _id : req.params.id, "ratings.userId" : req.body.userId })
             .then(findBook => {
-                if(findBook) res.status(403).json("Le livre a deja ete noté par cet utilisateur")
-                //  Cest un nouveau votant du livre, donc ajout dun champ userId et un rating
-                else {
+                if(findBook) { return res.status(404).json("Le livre a deja ete noté par cet utilisateur")}
+                else {   //  Cest un nouveau votant du livre, donc ajout dun champ userId et un rating
                     return Book.updateOne({ _id : req.params.id },
-                        { $push: { ratings : { userId : req.body.userId, grade : req.body.grade }}}
-                    )
+                    {
+                        $push: {
+                            ratings : {
+                                userId : req.body.userId,
+                                grade : req.body.rating
+                            }
+                        }
+                    })
                 }
             })
             .catch (error => { res.status(407).json({error})})
@@ -144,16 +152,20 @@ exports.NotationBook = (req, res, next) => {
             })
             .catch (error => { res.status(422).json({error})} )
             
-            .then ( result => {  // MAJ de la notation moyenne du livre
+            .then (result => {  // MAJ de la notation moyenne du livre
                 return Book.updateOne({ _id : req.params.id },
-                    { $set: { 'averageRating' : result[0].roundAvg }}
+                    {
+                        $set: {'averageRating' : result[0].roundAvg}
+                    }
                 )
+            })
             .catch(error => { res.status(482).json({error})})
 
             .then( () => {  // Affichage du livre MAJ
                 return Book.findOne({ _id : req.params.id })
-                .then ((bookNoted => { res.status(200).json({ bookNoted })}))
-            })})
+                .then ((bookNoted => { res.status(200).json( bookNoted )}))
+            })
         }
-    } catch (error) { res.status(500).json({error})}  // Erreur daccces a la base BD
-};
+    }
+    catch (error) { res.status(500).json({error})}  // Erreur daccces a la base BD
+}
