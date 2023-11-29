@@ -9,8 +9,6 @@ const Book= require('./models/Book');
 // Middleware de prise en charge des données json dans lapplication express
 app.use(express.json());
 
-// const bodyParser = require("body-Parser");
-
 
 // Definition de la route (path) de notre server
 const path = require('path');

@@ -7,6 +7,7 @@ const multer = require('../middleware/multer-config')  // Middleware "multer" po
 const bookControllers= require('../controllers/bookControllers');
 
 
+
 // -9- Notation du livre
 router.post('/:id/rating', auth, bookControllers.NotationBook);
 

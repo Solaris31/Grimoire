@@ -1,5 +1,4 @@
 // Importation du modele book
-const bodyParser = require('body-parser');
 const Book = require('../models/Book');
 
 
@@ -59,7 +58,6 @@ exports.CreateBook = (req, res, next) => {
 
     bookToSave.save()
     .then( book => {  // Creation dun livre
-
         if(!book) { res.status(404).json({error})}
         else { res.status(200).json({message : 'Creation dun nouveau livre'}) }
     })
@@ -73,6 +71,9 @@ exports.UpdateBook = ( req, res, next) => {
 
     Book.findOne({_id : req.params.id})
     .then( () => {
+
+        console.log("\n\n req.body : ", req.body, '\n\n')
+
         if(req.file) {  // remplacement de limage
             req.body.imageUrl = `${req.protocol}://${req.get('host')}/images/${req.file.filename}`;
         }
@@ -94,17 +95,12 @@ exports.DeleteBook = (req, res, next) => {
 
     Book.findOne({ _id: req.params.id})
     .then( bookToDelete => {
-        if (bookToDelete.userId != req.auth.userId) {
-            res.status(401).json({message : 'Droits insuffisants pour la suppression du livre'});
-        } 
-        else {
-            const filename = bookToDelete.imageUrl.split('/images/')[1];
-            fs.unlink(`images/${filename}`, () => {
-                bookToDelete.deleteOne({_id : req.params.id})
-                .then( () => {res.status(200).json({message : 'Livre supprimé'})})
-                .catch(error => res.status(403).json({error}));
-            })
-        }
+        const filename = bookToDelete.imageUrl.split('/images/')[1];
+        fs.unlink(`images/${filename}`, () => {
+            bookToDelete.deleteOne({_id : req.params.id})
+            .then( () => {res.status(200).json({message : 'Livre supprimé'})})
+            .catch(error => res.status(403).json({error}));
+        })
     })
     .catch(error => res.status(500).json(error));
 };
@@ -113,59 +109,46 @@ exports.DeleteBook = (req, res, next) => {
 // -9- Note un livre puis laffiche ----------------------------------------------------------------
 exports.NotationBook = (req, res, next) => {
 
-    try {
-        if (req.body.rating <1 || req.body.rating >5)
-            return res.status(403).json('Erreur de note, la valeur doit etre comprise entre 1 et 5')
-        else {
-            // Teste si lutilisateur a DEJA noté ce livre
-            return Book.findOne({ _id : req.params.id, "ratings.userId" : req.body.userId })
-            .then(findBook => {
-                if(findBook) { return res.status(404).json("Le livre a deja ete noté par cet utilisateur")}
-                else {   //  Cest un nouveau votant du livre, donc ajout dun champ userId et un rating
-                    return Book.updateOne({ _id : req.params.id },
-                    {
-                        $push: {
-                            ratings : {
-                                userId : req.body.userId,
-                                grade : req.body.rating
-                            }
-                        }
-                    })
+    if (req.body.rating <1 || req.body.rating >5) { return res.status(403).json('Erreur de note, la valeur doit etre comprise entre 1 et 5') }
+
+    Book.findOne({ _id : req.params.id, "ratings.userId" : req.auth.userId })
+    .then( bookFind => {
+        if (bookFind) { return res.status(404).json('Livre deja noté par cet utilisateur')}
+        else { return Book.updateOne({ _id : req.params.id },
+            {
+                $push: {
+                    ratings : {
+                        userId : req.auth.userId,
+                        grade : req.body.rating
+                    }
                 }
             })
-            .catch (error => { res.status(407).json({error})})
-
-
-            // Creation du pipeline pour attribuer la moyenne au livre
-            .then ( () => {
-                return Book.aggregate([
-                    { $match: { $expr : { $eq: [ '$_id' , { $toObjectId: (req.params.id) }]}}},
-                    { $unwind:  "$ratings" },
-                    { $group: {
-                        "_id": "$_id",
-                        "avgGrade" : { $avg: "$ratings.grade" },
-                    }},
-                    { $addFields: {
-                        "roundAvg" : { $round : ["$avgGrade" , 1]}
-                    }}
-                ])
-            })
-            .catch (error => { res.status(422).json({error})} )
-            
-            .then (result => {  // MAJ de la notation moyenne du livre
-                return Book.updateOne({ _id : req.params.id },
-                    {
-                        $set: {'averageRating' : result[0].roundAvg}
-                    }
-                )
-            })
-            .catch(error => { res.status(482).json({error})})
-
-            .then( () => {  // Affichage du livre MAJ
-                return Book.findOne({ _id : req.params.id })
-                .then ((bookNoted => { res.status(200).json( bookNoted )}))
-            })
         }
-    }
-    catch (error) { res.status(500).json({error})}  // Erreur daccces a la base BD
+    })
+    // Creation du pipeline pour attribuer la moyenne au livre
+    .then ( () => {
+        return Book.aggregate([
+            { $match: { $expr : { $eq: [ '$_id' , { $toObjectId: (req.params.id) }]}}},
+            { $unwind:  "$ratings" },
+            { $group: {
+                "_id": "$_id",
+                "avgGrade" : { $avg: "$ratings.grade" },
+            }},
+            { $addFields: {
+                "roundAvg" : { $round : ["$avgGrade" , 1]}
+            }}
+        ])
+    })
+    .then (result => {  // MAJ de la notation moyenne du livre
+        return Book.updateOne({ _id : req.params.id },
+            {
+                $set: {'averageRating' : result[0].roundAvg}
+            }
+        )
+    })
+    .then( () => {  // Affichage du livre MAJ
+        return Book.findOne({ _id : req.params.id })
+        .then ((bookNoted => { res.status(200).json( bookNoted )}))
+    })
+    .catch(error => res.status(500).json({error}))
 }
