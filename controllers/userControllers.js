@@ -17,7 +17,7 @@ exports.CreateUser = (req, res, next) => {
     delete req.body._id;
 
     const newUser = new User({
-      email: (req.body.email),                                                  // Maj email en minuscule
+      email: (req.body.email),
       password: hash                                                            // Maj du MDP haché
     });
 
@@ -43,7 +43,7 @@ exports.AuthentifyUser = (req, res, next) => {
       bcrypt.compare( req.body.password , userBD.password )
       .then(result => {
         if (result) {res.status(200).json({                                            // MPD correct
-          _id : userBD._id,
+          // _id : userBD._id,
           userId : userBD._id,
           token : jsonWebToken.sign(
             {userId: userBD._id},

@@ -72,8 +72,6 @@ exports.UpdateBook = ( req, res, next) => {
     Book.findOne({_id : req.params.id})
     .then( () => {
 
-        console.log("\n\n req.body : ", req.body, '\n\n')
-
         if(req.file) {  // remplacement de limage
             req.body.imageUrl = `${req.protocol}://${req.get('host')}/images/${req.file.filename}`;
         }
