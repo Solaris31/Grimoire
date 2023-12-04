@@ -1,48 +1,42 @@
 const multer = require('multer');
-const path= require('path');
+const path = require('path');
 const sharp = require('sharp');
-const fs = require('fs');
-const { log } = require('console');
+const fs = require('fs')
 
-
-// MIME_TYPES : RE-definition du format dun objet
 const MIME_TYPES = {
-    'image/jpg': 'jpg',
-    'image/jpeg': 'jpeg',
-    'image/png': 'png'
+  'image/jpg': 'jpg',
+  'image/jpeg': 'jpg',
+  'image/png': 'png'
 };
-
 
 const storage = multer.diskStorage({
   destination: (req, file, callback) => {
     callback(null, 'images');
   },
   filename: (req, file, callback) => {
-    const name = file.originalname.split(' ').join('_');  // On separe les mots apres les espaces et on reconstitue en joingnant les mots par un _ 
+    const name = file.originalname.split(' ').join('_');
     const extension = MIME_TYPES[file.mimetype];
-    const fileName = `${path.parse(name).name}_${Date.now()}.` + extension;
-    const outputFile = `${path.parse(name).name}`
-
-    console.log("\n\n----------------------------------------")
-    console.log("outputFile : ", outputFile)
-    console.log("name : ", name)
-    console.log("fileName : ", fileName)
-    console.log("extension : ", extension)
-    console.log("----------------------------------------\n\n")
-    
-
-    sharp(`images/${fileName}`)
-      .resize(200, 200)
-      .toFormat('webp')
-      // .toFile('images/test.webp', (error, info) => {
-      //   if(error) {
-      //     callback(error);
-      //   } else {
-      //     console.log('Conversion reussie!')
-      //   }
-      // })
-      // fs.unlinkSync(`images/${outputFile}` + '.extension')
+    const fileName = `${path.parse(name).name}_${Date.now()}.${extension}`;
     callback(null, fileName);
   }
 })
-module.exports = multer({storage: storage}).single('image');
+
+
+const imageReduction = (req, res, next) => {
+  if(!req.file) {
+    console.log('Pas de fichier a compresser'); return next();
+  }
+
+  const outputPath = `./images/imgCompressed/` + `${path.parse(req.file.filename).name}` + '.webp'
+
+  sharp(req.file.path)
+  .resize(200, 200)
+  .toFormat('webp')
+  .webp({quality:80})
+  .toFile(outputPath, (error) => {
+    if(error) {console.error(error)}
+  })
+  next();
+}
+
+module.exports = {upload: multer({ storage: storage }).single('image'), imageReduction};

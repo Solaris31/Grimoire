@@ -11,10 +11,10 @@ const bookControllers= require('../controllers/bookControllers');
 router.post('/:id/rating', auth, bookControllers.NotationBook);
 
 // -6- Creation dun livre
-router.post('/', auth, multer, bookControllers.CreateBook);
+router.post('/', auth, multer.upload, multer.imageReduction, bookControllers.CreateBook);
 
 // -7- Maj dun livre
-router.put('/:id', auth, multer, bookControllers.UpdateBook);
+router.put('/:id', auth, multer.upload, multer.imageReduction, bookControllers.UpdateBook);
 
 // -5- Affiche les 3 Meilleurs livres
 router.get('/bestrating', bookControllers.FindBestRating);

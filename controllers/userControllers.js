@@ -45,7 +45,7 @@ exports.AuthentifyUser = (req, res, next) => {
         if (result) {res.status(200).json({                                            // MPD correct
           // _id : userBD._id,
           userId : userBD._id,
-          token : jsonWebToken.sign(
+          token : jsonWebToken.sign(                                                   // ++++
             {userId: userBD._id},
             process.env.JWT_TOKEN,
             {expiresIn: '24h'})
